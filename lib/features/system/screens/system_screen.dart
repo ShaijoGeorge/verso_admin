@@ -55,7 +55,7 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
   Widget build(BuildContext context) {
     final configAsync = ref.watch(systemConfigProvider);
     final textTheme = context.textTheme;
-    final colors = context.colors;
+    final palette = context.palette;
 
     return Scaffold(
       appBar: AppBar(
@@ -66,21 +66,20 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
             tooltip: 'Reload Config',
             onPressed: () {
               _hasInitialized = false;
-              ref.read(systemConfigProvider.notifier).loadConfig();
+              ref.read(systemConfigProvider.notifier).reload();
             },
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: configAsync.when(
-        loading: () => const Center(child: VersoCircularProgress()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
           child: ErrorStateWidget(
-            message: 'Failed to load system configuration',
-            errorDetails: error.toString(),
+            error: error,
             onRetry: () {
               _hasInitialized = false;
-              ref.read(systemConfigProvider.notifier).loadConfig();
+              ref.read(systemConfigProvider.notifier).reload();
             },
           ),
         ),
@@ -95,13 +94,13 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                 // Section 1: Maintenance Mode Alert Banner if active
                 if (config.maintenanceMode) ...[
                   VersoCard(
-                    backgroundColor: colors.accent.withValues(alpha: 0.15),
-                    borderColor: colors.accent,
+                    color: palette.accent.withValues(alpha: 0.15),
+                    border: Border.all(color: palette.accent),
                     child: Row(
                       children: [
                         Icon(
                           Icons.warning_amber_rounded,
-                          color: colors.accent,
+                          color: palette.accent,
                           size: 32,
                         ),
                         const Gap(Spacing.sm),
@@ -111,16 +110,16 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                             children: [
                               Text(
                                 'MAINTENANCE MODE ACTIVE',
-                                style: textTheme.labelLarge.copyWith(
-                                  color: colors.accent,
+                                style: textTheme.labelLarge?.copyWith(
+                                  color: palette.accent,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const Gap(2),
                               Text(
                                 'All main Verso app clients are blocked with maintenance banner.',
-                                style: textTheme.bodySmall.copyWith(
-                                  color: colors.textSecondary,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: palette.textMuted,
                                 ),
                               ),
                             ],
@@ -135,8 +134,13 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                 // Section 2: App Version & Force Update
                 const VersoSectionHeader(
                   title: 'App Update Policies',
-                  subtitle:
-                      'Control client force-updates, minimum build thresholds, and download URLs.',
+                ),
+                const Gap(4),
+                Text(
+                  'Control client force-updates, minimum build thresholds, and download URLs.',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: palette.textMuted,
+                  ),
                 ),
                 const Gap(Spacing.sm),
                 VersoCard(
@@ -146,30 +150,34 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           'Enforce Mandatory Update',
-                          style: textTheme.bodyLarge.copyWith(
+                          style: textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         subtitle: Text(
                           'If enabled, users below minimum required version cannot dismiss the update dialog.',
-                          style: textTheme.bodySmall.copyWith(
-                            color: colors.textSecondary,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: palette.textMuted,
                           ),
                         ),
                         value: config.forceUpdate,
-                        activeColor: colors.accent,
+                        activeThumbColor: palette.accent,
                         onChanged: (val) async {
                           final success = await ref
                               .read(systemConfigProvider.notifier)
                               .toggleForceUpdate(val);
                           if (context.mounted) {
-                            VersoSnackbar.show(
-                              context,
-                              message: success
-                                  ? 'Force update policy updated to $val'
-                                  : 'Failed to update policy',
-                              isError: !success,
-                            );
+                            if (success) {
+                              VersoSnackbar.success(
+                                context,
+                                message: 'Force update policy updated to $val',
+                              );
+                            } else {
+                              VersoSnackbar.error(
+                                context,
+                                message: 'Failed to update policy',
+                              );
+                            }
                           }
                         },
                       ),
@@ -197,7 +205,8 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                       VersoTextField(
                         label: 'Download / Release URL',
                         controller: _downloadUrlController,
-                        hintText: 'https://versobibletracker.netlify.app/#download',
+                        hintText:
+                            'https://versobibletracker.netlify.app/#download',
                       ),
                       const Gap(Spacing.md),
                       Align(
@@ -209,19 +218,26 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                             final success = await ref
                                 .read(systemConfigProvider.notifier)
                                 .updateVersions(
-                                  minVersion: _minVersionController.text.trim(),
+                                  minVersion:
+                                      _minVersionController.text.trim(),
                                   latestVersion:
                                       _latestVersionController.text.trim(),
-                                  updateUrl: _downloadUrlController.text.trim(),
+                                  updateUrl:
+                                      _downloadUrlController.text.trim(),
                                 );
                             if (context.mounted) {
-                              VersoSnackbar.show(
-                                context,
-                                message: success
-                                    ? 'Version policies saved successfully'
-                                    : 'Failed to save version policies',
-                                isError: !success,
-                              );
+                              if (success) {
+                                VersoSnackbar.success(
+                                  context,
+                                  message:
+                                      'Version policies saved successfully',
+                                );
+                              } else {
+                                VersoSnackbar.error(
+                                  context,
+                                  message: 'Failed to save version policies',
+                                );
+                              }
                             }
                           },
                         ),
@@ -235,8 +251,13 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                 // Section 3: Maintenance Control
                 const VersoSectionHeader(
                   title: 'Maintenance Controls',
-                  subtitle:
-                      'Lock client access during database migrations or infrastructure maintenance.',
+                ),
+                const Gap(4),
+                Text(
+                  'Lock client access during database migrations or infrastructure maintenance.',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: palette.textMuted,
+                  ),
                 ),
                 const Gap(Spacing.sm),
                 VersoCard(
@@ -246,30 +267,35 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           'Maintenance Mode',
-                          style: textTheme.bodyLarge.copyWith(
+                          style: textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         subtitle: Text(
                           'Instructs clients to display a maintenance screen and halt requests.',
-                          style: textTheme.bodySmall.copyWith(
-                            color: colors.textSecondary,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: palette.textMuted,
                           ),
                         ),
                         value: config.maintenanceMode,
-                        activeColor: colors.accent,
+                        activeThumbColor: palette.accent,
                         onChanged: (val) async {
                           final success = await ref
                               .read(systemConfigProvider.notifier)
                               .toggleMaintenanceMode(val);
                           if (context.mounted) {
-                            VersoSnackbar.show(
-                              context,
-                              message: success
-                                  ? 'Maintenance mode toggled to $val'
-                                  : 'Failed to update maintenance mode',
-                              isError: !success,
-                            );
+                            if (success) {
+                              VersoSnackbar.success(
+                                context,
+                                message:
+                                    'Maintenance mode toggled to $val',
+                              );
+                            } else {
+                              VersoSnackbar.error(
+                                context,
+                                message: 'Failed to update maintenance mode',
+                              );
+                            }
                           }
                         },
                       ),
@@ -297,13 +323,18 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                                 .read(systemConfigProvider.notifier)
                                 .saveConfig(current);
                             if (context.mounted) {
-                              VersoSnackbar.show(
-                                context,
-                                message: success
-                                    ? 'Maintenance message updated'
-                                    : 'Failed to update maintenance message',
-                                isError: !success,
-                              );
+                              if (success) {
+                                VersoSnackbar.success(
+                                  context,
+                                  message: 'Maintenance message updated',
+                                );
+                              } else {
+                                VersoSnackbar.error(
+                                  context,
+                                  message:
+                                      'Failed to update maintenance message',
+                                );
+                              }
                             }
                           },
                         ),
@@ -317,8 +348,13 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                 // Section 4: Daily Verse Remote Override
                 const VersoSectionHeader(
                   title: 'Daily Verse Remote Override',
-                  subtitle:
-                      'Push an immediate daily verse to all devices, overriding the standard day-of-year schedule.',
+                ),
+                const Gap(4),
+                Text(
+                  'Push an immediate daily verse to all devices, overriding the standard day-of-year schedule.',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: palette.textMuted,
+                  ),
                 ),
                 const Gap(Spacing.sm),
                 VersoCard(
@@ -329,30 +365,34 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           'Enable Verse Override',
-                          style: textTheme.bodyLarge.copyWith(
+                          style: textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         subtitle: Text(
                           'When turned ON, the app presents this curated verse instead of the routine sequence.',
-                          style: textTheme.bodySmall.copyWith(
-                            color: colors.textSecondary,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: palette.textMuted,
                           ),
                         ),
                         value: config.verseOverrideEnabled,
-                        activeColor: colors.primary,
+                        activeThumbColor: palette.primary,
                         onChanged: (val) async {
                           final success = await ref
                               .read(systemConfigProvider.notifier)
                               .toggleVerseOverride(val);
                           if (context.mounted) {
-                            VersoSnackbar.show(
-                              context,
-                              message: success
-                                  ? 'Verse override toggled to $val'
-                                  : 'Failed to update verse override',
-                              isError: !success,
-                            );
+                            if (success) {
+                              VersoSnackbar.success(
+                                context,
+                                message: 'Verse override toggled to $val',
+                              );
+                            } else {
+                              VersoSnackbar.error(
+                                context,
+                                message: 'Failed to update verse override',
+                              );
+                            }
                           }
                         },
                       ),
@@ -393,19 +433,26 @@ class _SystemScreenState extends ConsumerState<SystemScreen> {
                             final success = await ref
                                 .read(systemConfigProvider.notifier)
                                 .updateVerseOverride(
-                                  reference: _verseRefController.text.trim(),
+                                  reference:
+                                      _verseRefController.text.trim(),
                                   text: _verseTextController.text.trim(),
                                   mlPoc: _versePocController.text.trim(),
                                   mlBsi: _verseBsiController.text.trim(),
                                 );
                             if (context.mounted) {
-                              VersoSnackbar.show(
-                                context,
-                                message: success
-                                    ? 'Daily verse override published!'
-                                    : 'Failed to publish verse override',
-                                isError: !success,
-                              );
+                              if (success) {
+                                VersoSnackbar.success(
+                                  context,
+                                  message:
+                                      'Daily verse override published!',
+                                );
+                              } else {
+                                VersoSnackbar.error(
+                                  context,
+                                  message:
+                                      'Failed to publish verse override',
+                                );
+                              }
                             }
                           },
                         ),

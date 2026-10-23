@@ -18,19 +18,6 @@ class SystemConfig {
     this.updatedAt,
   });
 
-  final bool forceUpdate;
-  final String minRequiredVersion;
-  final String latestVersion;
-  final String updateUrl;
-  final bool maintenanceMode;
-  final String maintenanceMessage;
-  final bool verseOverrideEnabled;
-  final String verseOverrideReference;
-  final String verseOverrideText;
-  final String verseOverrideMalayalamPoc;
-  final String verseOverrideMalayalamBsi;
-  final DateTime? updatedAt;
-
   factory SystemConfig.fromJson(Map<String, dynamic> json) {
     return SystemConfig(
       forceUpdate: json['force_update'] as bool? ?? false,
@@ -59,6 +46,19 @@ class SystemConfig {
           : null,
     );
   }
+
+  final bool forceUpdate;
+  final String minRequiredVersion;
+  final String latestVersion;
+  final String updateUrl;
+  final bool maintenanceMode;
+  final String maintenanceMessage;
+  final bool verseOverrideEnabled;
+  final String verseOverrideReference;
+  final String verseOverrideText;
+  final String verseOverrideMalayalamPoc;
+  final String verseOverrideMalayalamBsi;
+  final DateTime? updatedAt;
 
   Map<String, dynamic> toJson() {
     return {
