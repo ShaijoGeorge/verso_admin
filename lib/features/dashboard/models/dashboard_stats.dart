@@ -7,12 +7,6 @@ class DashboardStats {
     required this.lastRefreshedAt,
   });
 
-  final int totalUsers;
-  final int activeReadersToday;
-  final int newSignupsToday;
-  final int openFeedbackCount;
-  final DateTime lastRefreshedAt;
-
   factory DashboardStats.empty() => DashboardStats(
         totalUsers: 0,
         activeReadersToday: 0,
@@ -20,4 +14,10 @@ class DashboardStats {
         openFeedbackCount: 0,
         lastRefreshedAt: DateTime.now(),
       );
+
+  final int totalUsers;
+  final int activeReadersToday;
+  final int newSignupsToday;
+  final int openFeedbackCount;
+  final DateTime lastRefreshedAt;
 }
