@@ -3,6 +3,13 @@
 -- Migration: 20261023_admin_schema.sql
 -- ==============================================================================
 
+-- 0. Ensure role & is_admin columns exist on profiles table (safe, non-destructive)
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'reader';
+
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
+
 -- 1. Create admin_devices table for storing FCM push notification tokens
 CREATE TABLE IF NOT EXISTS public.admin_devices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -21,6 +28,9 @@ CREATE INDEX IF NOT EXISTS idx_admin_devices_fcm_token ON public.admin_devices(f
 -- Enable Row Level Security (RLS) on admin_devices
 ALTER TABLE public.admin_devices ENABLE ROW LEVEL SECURITY;
 
+-- Drop policy if exists to allow safe re-runs
+DROP POLICY IF EXISTS "Admins can manage their own devices" ON public.admin_devices;
+
 -- Policy: Admins can view and manage their own registered devices
 CREATE POLICY "Admins can manage their own devices"
     ON public.admin_devices
@@ -28,12 +38,13 @@ CREATE POLICY "Admins can manage their own devices"
     USING (
         auth.uid() = user_id
         AND (
-            EXISTS (
+            (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+            OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+            OR EXISTS (
                 SELECT 1 FROM public.profiles
                 WHERE profiles.id = auth.uid()
                 AND (profiles.role = 'admin' OR profiles.is_admin = true)
             )
-            OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
         )
     )
     WITH CHECK (
@@ -65,6 +76,10 @@ ON CONFLICT (id) DO NOTHING;
 -- Enable Row Level Security on system_config
 ALTER TABLE public.system_config ENABLE ROW LEVEL SECURITY;
 
+-- Drop policies if exist to allow safe re-runs
+DROP POLICY IF EXISTS "Anyone can read system_config" ON public.system_config;
+DROP POLICY IF EXISTS "Admins can update system_config" ON public.system_config;
+
 -- Policy: Everyone (clients) can read system config
 CREATE POLICY "Anyone can read system_config"
     ON public.system_config
@@ -76,12 +91,13 @@ CREATE POLICY "Admins can update system_config"
     ON public.system_config
     FOR ALL
     USING (
-        EXISTS (
+        (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+        OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+        OR EXISTS (
             SELECT 1 FROM public.profiles
             WHERE profiles.id = auth.uid()
             AND (profiles.role = 'admin' OR profiles.is_admin = true)
         )
-        OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
     );
 
 -- 3. Database Trigger & Function for Real-Time Admin Alerts on New User Signup
@@ -90,26 +106,9 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
-DECLARE
-    project_url TEXT;
-    service_role_key TEXT;
 BEGIN
-    -- Optional pg_net HTTP hook to notify Edge Function notify-admin
-    -- When pg_net extension is enabled:
-    -- PERFORM net.http_post(
-    --     url := current_setting('app.settings.edge_url', true) || '/notify-admin',
-    --     headers := jsonb_build_object(
-    --         'Content-Type', 'application/json',
-    --         'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key', true)
-    --     ),
-    --     body := jsonb_build_object(
-    --         'event', 'NEW_SIGNUP',
-    --         'record', row_to_json(NEW)
-    --     )
-    -- );
     RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
-    -- Suppress errors to not block signup flow
     RETURN NEW;
 END;
 $$;
