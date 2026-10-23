@@ -11,39 +11,33 @@ final alertsRepositoryProvider = Provider<AlertsRepository>((ref) {
   return repo;
 });
 
-final alertFilterProvider = StateProvider<AlertType?>((ref) => null);
+class AlertFilterNotifier extends Notifier<AlertType?> {
+  @override
+  AlertType? build() => null;
 
-final liveAlertsProvider =
-    StateNotifierProvider<LiveAlertsNotifier, AsyncValue<List<LiveAlert>>>((ref) {
-  final repo = ref.watch(alertsRepositoryProvider);
-  return LiveAlertsNotifier(repo);
-});
+  @override
+  set state(AlertType? value) => super.state = value;
+}
 
-class LiveAlertsNotifier extends StateNotifier<AsyncValue<List<LiveAlert>>> {
-  LiveAlertsNotifier(this._repo) : super(const AsyncValue.loading()) {
-    _init();
-  }
+final alertFilterProvider =
+    NotifierProvider<AlertFilterNotifier, AlertType?>(AlertFilterNotifier.new);
 
-  final AlertsRepository _repo;
+class LiveAlertsNotifier extends AsyncNotifier<List<LiveAlert>> {
   StreamSubscription<LiveAlert>? _subscription;
 
-  Future<void> _init() async {
-    try {
-      final initialAlerts = await _repo.fetchRecentAlerts();
-      state = AsyncValue.data(initialAlerts);
+  @override
+  FutureOr<List<LiveAlert>> build() async {
+    final repo = ref.watch(alertsRepositoryProvider);
+    _subscription?.cancel();
+    _subscription = repo.subscribeToLiveAlerts().listen(
+      (newAlert) {
+        final current = state.value ?? [];
+        state = AsyncValue.data([newAlert, ...current]);
+      },
+    );
+    ref.onDispose(() => _subscription?.cancel());
 
-      _subscription = _repo.subscribeToLiveAlerts().listen(
-        (newAlert) {
-          final current = state.value ?? [];
-          state = AsyncValue.data([newAlert, ...current]);
-        },
-        onError: (err, st) {
-          // Keep current state on transient stream error
-        },
-      );
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
+    return repo.fetchRecentAlerts();
   }
 
   void clearAlerts() {
@@ -52,17 +46,14 @@ class LiveAlertsNotifier extends StateNotifier<AsyncValue<List<LiveAlert>>> {
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    try {
-      final alerts = await _repo.fetchRecentAlerts();
-      state = AsyncValue.data(alerts);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(alertsRepositoryProvider);
+      return repo.fetchRecentAlerts();
+    });
   }
 }
+
+final liveAlertsProvider =
+    AsyncNotifierProvider<LiveAlertsNotifier, List<LiveAlert>>(
+  LiveAlertsNotifier.new,
+);

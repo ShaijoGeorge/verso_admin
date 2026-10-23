@@ -222,7 +222,7 @@ class AlertsScreen extends ConsumerWidget {
   }
 
   void _showAlertDetails(BuildContext context, LiveAlert alert) {
-    VersoBottomSheet.show(
+    VersoBottomSheet.show<void>(
       context: context,
       title: alert.title,
       child: Column(

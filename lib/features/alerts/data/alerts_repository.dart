@@ -93,13 +93,16 @@ class AlertsRepository {
     if (user == null) return;
 
     try {
-      await _client.from('admin_devices').upsert({
-        'admin_id': user.id,
-        'fcm_token': fcmToken,
-        'device_name': deviceName,
-        'platform': defaultTargetPlatform.name,
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-      }, onConflict: 'fcm_token');
+      await _client.from('admin_devices').upsert(
+        {
+          'admin_id': user.id,
+          'fcm_token': fcmToken,
+          'device_name': deviceName,
+          'platform': defaultTargetPlatform.name,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
+        onConflict: 'fcm_token',
+      );
     } catch (e) {
       debugPrint('Failed to upsert admin device FCM token: $e');
     }

@@ -20,13 +20,6 @@ class LiveAlert {
     this.metadata,
   });
 
-  final String id;
-  final AlertType type;
-  final String title;
-  final String message;
-  final DateTime timestamp;
-  final Map<String, dynamic>? metadata;
-
   factory LiveAlert.fromProfileInsert(Map<String, dynamic> record) {
     final name = record['first_name'] != null
         ? '${record['first_name']} ${record['last_name'] ?? ''}'.trim()
@@ -59,4 +52,11 @@ class LiveAlert {
       metadata: record,
     );
   }
+
+  final String id;
+  final AlertType type;
+  final String title;
+  final String message;
+  final DateTime timestamp;
+  final Map<String, dynamic>? metadata;
 }
