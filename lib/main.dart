@@ -12,20 +12,24 @@ void main() async {
   // Load environment variables from .env if present
   await EnvConfig.init();
 
-  // Initialize Supabase client
-  if (EnvConfig.isConfigured) {
-    await Supabase.initialize(
-      url: EnvConfig.supabaseUrl,
-      // ignore: deprecated_member_use
-      anonKey: EnvConfig.supabaseAnonKey,
-    );
-  } else {
-    // Fallback placeholder initialization to allow app boot without immediate crash
-    await Supabase.initialize(
-      url: 'https://placeholder.supabase.co',
-      // ignore: deprecated_member_use
-      anonKey: 'placeholder-anon-key',
-    );
+  // Initialize Supabase client safely
+  try {
+    if (EnvConfig.isConfigured) {
+      await Supabase.initialize(
+        url: EnvConfig.supabaseUrl,
+        // ignore: deprecated_member_use
+        anonKey: EnvConfig.supabaseAnonKey,
+      );
+    } else {
+      // Fallback placeholder initialization to allow app boot without immediate crash
+      await Supabase.initialize(
+        url: 'https://placeholder.supabase.co',
+        // ignore: deprecated_member_use
+        anonKey: 'placeholder-anon-key',
+      );
+    }
+  } catch (e, st) {
+    debugPrint('Supabase initialization warning: $e\n$st');
   }
 
   runApp(
