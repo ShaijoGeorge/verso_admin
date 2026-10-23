@@ -4,7 +4,6 @@ import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:verso_admin/core/design/design.dart';
 import 'package:verso_admin/core/widgets/error_state_widget.dart';
-import 'package:verso_admin/features/feedback/models/feedback_item.dart';
 import 'package:verso_admin/features/feedback/models/feedback_type.dart';
 import 'package:verso_admin/features/feedback/providers/feedback_provider.dart';
 import 'package:verso_admin/features/feedback/widgets/feedback_detail_sheet.dart';

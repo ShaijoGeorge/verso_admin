@@ -14,24 +14,9 @@ class FeedbackItem {
     this.platform = 'unknown',
   });
 
-  final String id;
-  final String? userId;
-  final String? userEmail;
-  final FeedbackType type;
-  final String message;
-  final List<String> imageUrls;
-  final String appVersion;
-  final String platform;
-  final String status; // 'open', 'in_progress', 'resolved'
-  final DateTime createdAt;
-
-  bool get isResolved => status == 'resolved';
-  bool get isInProgress => status == 'in_progress';
-  bool get isOpen => status == 'open' || status.isEmpty;
-
   factory FeedbackItem.fromJson(Map<String, dynamic> json) {
     final rawImages = json['image_urls'];
-    List<String> images = [];
+    var images = <String>[];
     if (rawImages is List) {
       images = rawImages.map((e) => e.toString()).toList();
     } else if (json['image_url'] != null) {
@@ -53,4 +38,19 @@ class FeedbackItem {
           : DateTime.now(),
     );
   }
+
+  final String id;
+  final String? userId;
+  final String? userEmail;
+  final FeedbackType type;
+  final String message;
+  final List<String> imageUrls;
+  final String appVersion;
+  final String platform;
+  final String status; // 'open', 'in_progress', 'resolved'
+  final DateTime createdAt;
+
+  bool get isResolved => status == 'resolved';
+  bool get isInProgress => status == 'in_progress';
+  bool get isOpen => status == 'open' || status.isEmpty;
 }

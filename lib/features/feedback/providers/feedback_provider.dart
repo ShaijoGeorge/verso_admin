@@ -9,8 +9,31 @@ final feedbackRepositoryProvider = Provider<FeedbackRepository>((ref) {
   return FeedbackRepository(client: client);
 });
 
-final feedbackTypeFilterProvider = StateProvider<FeedbackType?>((ref) => null);
-final feedbackStatusFilterProvider = StateProvider<String?>((ref) => null);
+class FeedbackTypeFilterNotifier extends Notifier<FeedbackType?> {
+  @override
+  FeedbackType? build() => null;
+
+  @override
+  set state(FeedbackType? value) => super.state = value;
+}
+
+final feedbackTypeFilterProvider =
+    NotifierProvider<FeedbackTypeFilterNotifier, FeedbackType?>(
+  FeedbackTypeFilterNotifier.new,
+);
+
+class FeedbackStatusFilterNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  @override
+  set state(String? value) => super.state = value;
+}
+
+final feedbackStatusFilterProvider =
+    NotifierProvider<FeedbackStatusFilterNotifier, String?>(
+  FeedbackStatusFilterNotifier.new,
+);
 
 final feedbackInboxProvider =
     AsyncNotifierProvider<FeedbackInboxNotifier, List<FeedbackItem>>(

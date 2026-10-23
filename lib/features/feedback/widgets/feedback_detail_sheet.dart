@@ -15,7 +15,7 @@ class FeedbackDetailSheet extends ConsumerWidget {
   final FeedbackItem feedback;
 
   static void show(BuildContext context, FeedbackItem item) {
-    VersoBottomSheet.show(
+    VersoBottomSheet.show<void>(
       context: context,
       title: '${item.type.shortTitle} Details',
       child: FeedbackDetailSheet(feedback: item),
