@@ -144,15 +144,24 @@ class FeedbackDetailSheet extends ConsumerWidget {
                   label: 'Delete Record',
                   onPressed: () async {
                     Navigator.of(context).pop();
-                    await ref
-                        .read(feedbackRepositoryProvider)
-                        .deleteFeedback(feedback.id);
-                    ref.invalidate(feedbackInboxProvider);
-                    if (context.mounted) {
-                      VersoSnackbar.success(
-                        context,
-                        message: 'Feedback deleted successfully',
-                      );
+                    try {
+                      await ref
+                          .read(feedbackRepositoryProvider)
+                          .deleteFeedback(feedback.id);
+                      ref.invalidate(feedbackInboxProvider);
+                      if (context.mounted) {
+                        VersoSnackbar.success(
+                          context,
+                          message: 'Feedback deleted successfully',
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        VersoSnackbar.error(
+                          context,
+                          message: 'Failed to delete feedback: $e',
+                        );
+                      }
                     }
                   },
                 ),

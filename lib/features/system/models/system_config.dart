@@ -2,7 +2,7 @@ class SystemConfig {
   const SystemConfig({
     this.forceUpdate = false,
     this.minRequiredVersion = '2.0.0',
-    this.latestVersion = '2.1.2',
+    this.latestVersion = '2.0.1',
     this.updateUrl = 'https://versobibletracker.netlify.app/#download',
     this.maintenanceMode = false,
     this.maintenanceMessage =
@@ -23,7 +23,7 @@ class SystemConfig {
       forceUpdate: json['force_update'] as bool? ?? false,
       minRequiredVersion:
           json['min_required_version'] as String? ?? '2.0.0',
-      latestVersion: json['latest_version'] as String? ?? '2.1.2',
+      latestVersion: json['latest_version'] as String? ?? '2.0.1',
       updateUrl: json['update_url'] as String? ??
           'https://versobibletracker.netlify.app/#download',
       maintenanceMode: json['maintenance_mode'] as bool? ?? false,

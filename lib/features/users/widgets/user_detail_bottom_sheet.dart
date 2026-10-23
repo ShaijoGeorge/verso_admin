@@ -247,14 +247,23 @@ class UserDetailBottomSheet extends ConsumerWidget {
                   value: user.isStreakFrozen,
                   onChanged: (val) async {
                     Navigator.of(context).pop();
-                    await ref
-                        .read(usersListProvider.notifier)
-                        .toggleFreeze(user.id, val);
-                    if (context.mounted) {
-                      VersoSnackbar.success(
-                        context,
-                        message: 'Streak freeze set to $val for ${user.name}',
-                      );
+                    try {
+                      await ref
+                          .read(usersListProvider.notifier)
+                          .toggleFreeze(user.id, val);
+                      if (context.mounted) {
+                        VersoSnackbar.success(
+                          context,
+                          message: 'Streak freeze set to $val for ${user.name}',
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        VersoSnackbar.error(
+                          context,
+                          message: 'Failed to set streak freeze: $e',
+                        );
+                      }
                     }
                   },
                 ),
@@ -298,14 +307,23 @@ class UserDetailBottomSheet extends ConsumerWidget {
                       );
                       if (newStreak != null) {
                         if (context.mounted) Navigator.of(context).pop();
-                        await ref
-                            .read(usersListProvider.notifier)
-                            .updateStreak(user.id, newStreak);
-                        if (context.mounted) {
-                          VersoSnackbar.success(
-                            context,
-                            message: 'Streak updated to $newStreak days',
-                          );
+                        try {
+                          await ref
+                              .read(usersListProvider.notifier)
+                              .updateStreak(user.id, newStreak);
+                          if (context.mounted) {
+                            VersoSnackbar.success(
+                              context,
+                              message: 'Streak updated to $newStreak days',
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            VersoSnackbar.error(
+                              context,
+                              message: 'Failed to update streak: $e',
+                            );
+                          }
                         }
                       }
                     },
@@ -325,14 +343,23 @@ class UserDetailBottomSheet extends ConsumerWidget {
                     onPressed: () async {
                       Navigator.of(context).pop();
                       final newRole = user.isAdmin ? 'reader' : 'admin';
-                      await ref
-                          .read(usersListProvider.notifier)
-                          .updateUserRole(user.id, newRole);
-                      if (context.mounted) {
-                        VersoSnackbar.success(
-                          context,
-                          message: 'User role updated to $newRole',
-                        );
+                      try {
+                        await ref
+                            .read(usersListProvider.notifier)
+                            .updateUserRole(user.id, newRole);
+                        if (context.mounted) {
+                          VersoSnackbar.success(
+                            context,
+                            message: 'User role updated to $newRole',
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          VersoSnackbar.error(
+                            context,
+                            message: 'Failed to update role: $e',
+                          );
+                        }
                       }
                     },
                   ),

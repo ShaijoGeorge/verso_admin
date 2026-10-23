@@ -15,14 +15,18 @@ class SystemConfigNotifier extends AsyncNotifier<SystemConfig> {
   }
 
   Future<bool> saveConfig(SystemConfig config) async {
-    state = const AsyncValue.loading();
+    final previousConfig = state.value;
     try {
       final repo = ref.read(systemRepositoryProvider);
       await repo.saveConfig(config);
       state = AsyncValue.data(config);
       return true;
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (previousConfig != null) {
+        state = AsyncValue.data(previousConfig);
+      } else {
+        state = AsyncValue.error(e, st);
+      }
       return false;
     }
   }
