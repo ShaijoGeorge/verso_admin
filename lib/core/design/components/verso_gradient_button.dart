@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:verso_admin/core/design/extensions.dart';
 import 'package:verso_admin/core/design/tokens/radii.dart';
 import 'package:verso_admin/core/design/tokens/typography.dart';

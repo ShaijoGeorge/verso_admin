@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 abstract final class EnvConfig {
   static Future<void> init() async {
     try {
-      await dotenv.load(fileName: '.env');
+      await dotenv.load();
     } catch (_) {
       // .env file not present or couldn't be loaded; will fallback to fromEnvironment
     }

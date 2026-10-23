@@ -19,8 +19,10 @@ class VersoTextField extends StatelessWidget {
   const VersoTextField({
     required this.controller,
     required this.label,
-    required this.icon,
     super.key,
+    this.icon = Icons.edit_note_rounded,
+    this.hintText,
+    this.maxLines = 1,
     this.keyboardType,
     this.autocorrect = true,
     this.obscureText = false,
@@ -31,7 +33,9 @@ class VersoTextField extends StatelessWidget {
 
   final TextEditingController controller;
   final String label;
-  final IconData icon;
+  final IconData? icon;
+  final String? hintText;
+  final int maxLines;
   final TextInputType? keyboardType;
   final bool autocorrect;
   final bool obscureText;
@@ -46,6 +50,7 @@ class VersoTextField extends StatelessWidget {
 
     final decoration = InputDecoration(
       labelText: label,
+      hintText: hintText,
       labelStyle: const TextStyle(
         fontFamily: AppTypography.fontFamily,
         fontSize: 14,
@@ -56,15 +61,18 @@ class VersoTextField extends StatelessWidget {
         fontSize: 13,
         fontWeight: FontWeight.w700,
       ).copyWith(color: colorScheme.primary),
-      prefixIcon: Padding(
-        padding: const EdgeInsets.only(left: 12, right: 8),
-        child: Icon(
-          icon,
-          size: 20,
-          color: colorScheme.primary.withValues(alpha: 0.75),
-        ),
-      ),
-      prefixIconConstraints: const BoxConstraints(minWidth: 44),
+      prefixIcon: icon != null
+          ? Padding(
+              padding: const EdgeInsets.only(left: 12, right: 8),
+              child: Icon(
+                icon,
+                size: 20,
+                color: colorScheme.primary.withValues(alpha: 0.75),
+              ),
+            )
+          : null,
+      prefixIconConstraints:
+          icon != null ? const BoxConstraints(minWidth: 44) : null,
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: isDark
@@ -109,6 +117,7 @@ class VersoTextField extends StatelessWidget {
 
     return TextFormField(
       controller: controller,
+      maxLines: maxLines,
       keyboardType: keyboardType,
       autocorrect: autocorrect,
       obscureText: obscureText,
