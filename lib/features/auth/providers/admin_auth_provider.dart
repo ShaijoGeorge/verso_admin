@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:verso_admin/core/supabase/supabase_provider.dart';
@@ -21,16 +22,9 @@ final isAdminVerifiedProvider = FutureProvider<bool>((ref) async {
   return repo.verifyAdminRole(user);
 });
 
-final adminLoginControllerProvider =
-    StateNotifierProvider<AdminLoginController, AsyncValue<User?>>((ref) {
-  final repo = ref.watch(adminAuthRepositoryProvider);
-  return AdminLoginController(repo);
-});
-
-class AdminLoginController extends StateNotifier<AsyncValue<User?>> {
-  AdminLoginController(this._repo) : super(const AsyncValue.data(null));
-
-  final AdminAuthRepository _repo;
+class AdminLoginController extends AsyncNotifier<User?> {
+  @override
+  FutureOr<User?> build() => null;
 
   Future<bool> login({
     required String email,
@@ -38,7 +32,8 @@ class AdminLoginController extends StateNotifier<AsyncValue<User?>> {
   }) async {
     state = const AsyncValue.loading();
     try {
-      final user = await _repo.signInAdmin(email: email, password: password);
+      final repo = ref.read(adminAuthRepositoryProvider);
+      final user = await repo.signInAdmin(email: email, password: password);
       state = AsyncValue.data(user);
       return true;
     } catch (e, st) {
@@ -50,10 +45,16 @@ class AdminLoginController extends StateNotifier<AsyncValue<User?>> {
   Future<void> logout() async {
     state = const AsyncValue.loading();
     try {
-      await _repo.signOut();
+      final repo = ref.read(adminAuthRepositoryProvider);
+      await repo.signOut();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 }
+
+final adminLoginControllerProvider =
+    AsyncNotifierProvider<AdminLoginController, User?>(
+  AdminLoginController.new,
+);
