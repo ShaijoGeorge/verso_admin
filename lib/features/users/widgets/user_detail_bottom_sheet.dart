@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
-import 'package:intl/intl.dart';
 import 'package:verso_admin/core/design/design.dart';
+import 'package:verso_admin/core/widgets/verso_avatar.dart';
 import 'package:verso_admin/features/users/models/user_profile.dart';
 import 'package:verso_admin/features/users/providers/users_provider.dart';
 
@@ -15,7 +15,7 @@ class UserDetailBottomSheet extends ConsumerWidget {
   final VersoUserProfile user;
 
   static void show(BuildContext context, VersoUserProfile user) {
-    VersoBottomSheet.show(
+    VersoBottomSheet.show<void>(
       context: context,
       title: 'User Telemetry & Profile',
       child: UserDetailBottomSheet(user: user),
@@ -61,7 +61,7 @@ class UserDetailBottomSheet extends ConsumerWidget {
                     const SizedBox(width: 8),
                     VersoChip(
                       text: '${user.canonType.toUpperCase()} CANON',
-                      color: colors.tertiary ?? colors.primary,
+                      color: colors.tertiary,
                     ),
                   ],
                 ),

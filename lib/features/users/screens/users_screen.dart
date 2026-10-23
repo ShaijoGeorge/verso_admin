@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:verso_admin/core/design/design.dart';
 import 'package:verso_admin/core/widgets/error_state_widget.dart';
+import 'package:verso_admin/core/widgets/verso_avatar.dart';
 import 'package:verso_admin/features/users/providers/users_provider.dart';
 import 'package:verso_admin/features/users/widgets/user_detail_bottom_sheet.dart';
 
@@ -59,7 +60,6 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                       },
                     )
                   : null,
-              validator: null,
             ),
           ),
           const Divider(height: 1),

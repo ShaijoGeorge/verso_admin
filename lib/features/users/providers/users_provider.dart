@@ -8,7 +8,18 @@ final usersRepositoryProvider = Provider<UsersRepository>((ref) {
   return UsersRepository(client: client);
 });
 
-final userSearchQueryProvider = StateProvider<String>((ref) => '');
+class UserSearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  @override
+  set state(String value) => super.state = value;
+}
+
+final userSearchQueryProvider =
+    NotifierProvider<UserSearchQueryNotifier, String>(
+  UserSearchQueryNotifier.new,
+);
 
 final usersListProvider =
     AsyncNotifierProvider<UsersListNotifier, List<VersoUserProfile>>(

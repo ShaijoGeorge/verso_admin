@@ -16,26 +16,6 @@ class VersoUserProfile {
     this.lastSeenAt,
   });
 
-  final String id;
-  final String email;
-  final String name;
-  final String gender;
-  final String role;
-  final int streakCount;
-  final bool isStreakFrozen;
-  final int otChaptersCompleted;
-  final int ntChaptersCompleted;
-  final String canonType;
-  final String bibleLanguage;
-  final String? birthday;
-  final DateTime createdAt;
-  final DateTime? lastSeenAt;
-
-  bool get isAdmin => role == 'admin';
-
-  double get otProgress => (otChaptersCompleted / 929.0).clamp(0.0, 1.0);
-  double get ntProgress => (ntChaptersCompleted / 260.0).clamp(0.0, 1.0);
-
   factory VersoUserProfile.fromJson(Map<String, dynamic> json) {
     final rawName = json['name'] as String?;
     final firstName = json['first_name'] as String?;
@@ -73,4 +53,24 @@ class VersoUserProfile {
               : null),
     );
   }
+
+  final String id;
+  final String email;
+  final String name;
+  final String gender;
+  final String role;
+  final int streakCount;
+  final bool isStreakFrozen;
+  final int otChaptersCompleted;
+  final int ntChaptersCompleted;
+  final String canonType;
+  final String bibleLanguage;
+  final String? birthday;
+  final DateTime createdAt;
+  final DateTime? lastSeenAt;
+
+  bool get isAdmin => role == 'admin';
+
+  double get otProgress => (otChaptersCompleted / 929.0).clamp(0.0, 1.0);
+  double get ntProgress => (ntChaptersCompleted / 260.0).clamp(0.0, 1.0);
 }
