@@ -21,17 +21,20 @@ class LiveAlert {
   });
 
   factory LiveAlert.fromProfileInsert(Map<String, dynamic> record) {
+    final username = record['username'] as String?;
     final name = record['first_name'] != null
         ? '${record['first_name']} ${record['last_name'] ?? ''}'.trim()
-        : (record['name'] ?? record['email'] ?? 'A new reader');
+        : (record['name'] ?? username ?? record['email'] ?? 'A new reader');
+
+    final timeStr = record['created_at'] ?? record['updated_at'];
 
     return LiveAlert(
       id: record['id']?.toString() ?? DateTime.now().toIso8601String(),
       type: AlertType.newUser,
       title: 'New User Registered',
       message: '$name just joined Verso!',
-      timestamp: record['created_at'] != null
-          ? DateTime.tryParse(record['created_at'].toString()) ?? DateTime.now()
+      timestamp: timeStr != null
+          ? DateTime.tryParse(timeStr.toString()) ?? DateTime.now()
           : DateTime.now(),
       metadata: record,
     );

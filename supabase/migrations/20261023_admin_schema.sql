@@ -3,12 +3,74 @@
 -- Migration: 20261023_admin_schema.sql
 -- ==============================================================================
 
--- 0. Ensure role & is_admin columns exist on profiles table (safe, non-destructive)
+-- 0. Ensure role & telemetry columns exist on profiles table (safe, non-destructive)
 ALTER TABLE public.profiles 
 ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'reader';
 
 ALTER TABLE public.profiles 
 ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
+
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS email TEXT;
+
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS is_streak_frozen BOOLEAN DEFAULT false;
+
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS gender TEXT DEFAULT 'male';
+
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS birthday TEXT;
+
+-- Safely backfill email & metadata from auth.users into profiles
+DO $$
+BEGIN
+    UPDATE public.profiles p
+    SET 
+        email = COALESCE(p.email, u.email),
+        created_at = COALESCE(p.created_at, u.created_at, p.updated_at),
+        gender = COALESCE(p.gender, u.raw_user_meta_data->>'gender', 'male'),
+        birthday = COALESCE(p.birthday, u.raw_user_meta_data->>'birthday', u.raw_user_meta_data->>'birth_date')
+    FROM auth.users u
+    WHERE p.id = u.id;
+EXCEPTION WHEN OTHERS THEN
+    -- Ignore if auth.users schema is restricted
+    NULL;
+END $$;
+
+-- Enable RLS and add admin policies on profiles
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.profiles;
+CREATE POLICY "Admins can view all profiles"
+    ON public.profiles
+    FOR SELECT
+    USING (
+        auth.uid() = id
+        OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+        OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+        OR EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = auth.uid() AND (p.role = 'admin' OR p.is_admin = true)
+        )
+    );
+
+DROP POLICY IF EXISTS "Admins can update user profiles" ON public.profiles;
+CREATE POLICY "Admins can update user profiles"
+    ON public.profiles
+    FOR UPDATE
+    USING (
+        auth.uid() = id
+        OR (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+        OR (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+        OR EXISTS (
+            SELECT 1 FROM public.profiles p
+            WHERE p.id = auth.uid() AND (p.role = 'admin' OR p.is_admin = true)
+        )
+    );
 
 -- 1. Create admin_devices table for storing FCM push notification tokens
 CREATE TABLE IF NOT EXISTS public.admin_devices (

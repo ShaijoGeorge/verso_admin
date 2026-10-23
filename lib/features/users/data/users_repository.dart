@@ -18,19 +18,30 @@ class UsersRepository {
 
       if (searchQuery != null && searchQuery.trim().isNotEmpty) {
         final term = '%${searchQuery.trim()}%';
-        query = query.or('email.ilike.$term,name.ilike.$term,first_name.ilike.$term');
+        query = query.or('username.ilike.$term,canon_type.ilike.$term,role.ilike.$term');
       }
 
-      final list = await query
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+      dynamic list;
+      try {
+        list = await query
+            .order('updated_at', ascending: false)
+            .range(offset, offset + limit - 1);
+      } catch (_) {
+        try {
+          list = await query
+              .order('created_at', ascending: false)
+              .range(offset, offset + limit - 1);
+        } catch (_) {
+          list = await query.range(offset, offset + limit - 1);
+        }
+      }
 
       return (list as List)
           .map((item) => VersoUserProfile.fromJson(item as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      // Fallback if profiles table is empty or under migration
-      return [];
+      // Rethrow to let the UI ErrorStateWidget present the exact reason and allow retry
+      rethrow;
     }
   }
 
@@ -51,10 +62,16 @@ class UsersRepository {
     required String userId,
     required bool isFrozen,
   }) async {
-    await _client.from('profiles').update({
-      'is_streak_frozen': isFrozen,
-      'streak_freeze_active': isFrozen,
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', userId);
+    try {
+      await _client.from('profiles').update({
+        'is_streak_frozen': isFrozen,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }).eq('id', userId);
+    } catch (_) {
+      // If optional column not present yet, update timestamp safely
+      await _client.from('profiles').update({
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }).eq('id', userId);
+    }
   }
 }

@@ -59,13 +59,20 @@ class AlertsRepository {
       final profiles = await _client
           .from('profiles')
           .select()
-          .order('created_at', ascending: false)
+          .order('updated_at', ascending: false)
           .limit(limit);
 
       for (final p in profiles as List) {
         alerts.add(LiveAlert.fromProfileInsert(p as Map<String, dynamic>));
       }
-    } catch (_) {}
+    } catch (_) {
+      try {
+        final profiles = await _client.from('profiles').select().limit(limit);
+        for (final p in profiles as List) {
+          alerts.add(LiveAlert.fromProfileInsert(p as Map<String, dynamic>));
+        }
+      } catch (_) {}
+    }
 
     // 2. Fetch recent feedbacks
     try {
@@ -95,9 +102,9 @@ class AlertsRepository {
     try {
       await _client.from('admin_devices').upsert(
         {
-          'admin_id': user.id,
+          'user_id': user.id,
           'fcm_token': fcmToken,
-          'device_name': deviceName,
+          'device_info': {'name': deviceName},
           'platform': defaultTargetPlatform.name,
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         },

@@ -43,20 +43,37 @@ class DashboardRepository {
           .count(CountOption.exact);
       newSignupsToday = res.count;
     } catch (_) {
-      newSignupsToday = 0;
+      try {
+        final res = await _client
+            .from('profiles')
+            .select('id')
+            .gte('updated_at', startOfDay)
+            .count(CountOption.exact);
+        newSignupsToday = res.count;
+      } catch (_) {
+        newSignupsToday = 0;
+      }
     }
 
     // 3. Active Readers Today
     try {
-      // First attempt reading_activity or daily_readings
       final res = await _client
           .from('profiles')
           .select('id')
-          .gte('updated_at', startOfDay)
+          .gt('current_streak', 0)
           .count(CountOption.exact);
       activeReadersToday = res.count;
     } catch (_) {
-      activeReadersToday = 0;
+      try {
+        final res = await _client
+            .from('profiles')
+            .select('id')
+            .gte('updated_at', startOfDay)
+            .count(CountOption.exact);
+        activeReadersToday = res.count;
+      } catch (_) {
+        activeReadersToday = 0;
+      }
     }
 
     // 4. Open Feedback

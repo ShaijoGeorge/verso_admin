@@ -17,22 +17,48 @@ class VersoUserProfile {
   });
 
   factory VersoUserProfile.fromJson(Map<String, dynamic> json) {
-    final rawName = json['name'] as String?;
+    final username = json['username'] as String?;
+    final rawName = json['name'] as String? ?? json['full_name'] as String?;
     final firstName = json['first_name'] as String?;
     final lastName = json['last_name'] as String?;
-    final email = json['email'] as String? ?? 'user@verso.app';
+    final email = json['email'] as String?;
 
-    final displayName = (rawName != null && rawName.isNotEmpty)
-        ? rawName
-        : (firstName != null ? '$firstName ${lastName ?? ''}'.trim() : email);
+    final displayName = (rawName != null && rawName.trim().isNotEmpty)
+        ? rawName.trim()
+        : (username != null && username.trim().isNotEmpty)
+            ? username.trim()
+            : (firstName != null
+                ? '$firstName ${lastName ?? ''}'.trim()
+                : (email ?? 'Reader'));
+
+    final streak = (json['current_streak'] as num?)?.toInt() ??
+        (json['streak_count'] as num?)?.toInt() ??
+        0;
+
+    final createdAt = json['created_at'] != null
+        ? DateTime.tryParse(json['created_at'].toString()) ??
+            DateTime.tryParse(json['updated_at']?.toString() ?? '') ??
+            DateTime.now()
+        : (json['updated_at'] != null
+            ? DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now()
+            : DateTime.now());
+
+    final lastSeenAt = json['last_seen'] != null
+        ? DateTime.tryParse(json['last_seen'].toString())
+        : (json['updated_at'] != null
+            ? DateTime.tryParse(json['updated_at'].toString())
+            : null);
 
     return VersoUserProfile(
       id: json['id'] as String? ?? '',
-      email: email,
+      email: email ??
+          (username != null && username.contains('@')
+              ? username
+              : '${displayName.toLowerCase().replaceAll(' ', '')}@verso.app'),
       name: displayName,
       gender: json['gender'] as String? ?? 'male',
       role: json['role'] as String? ?? 'reader',
-      streakCount: (json['streak_count'] as num?)?.toInt() ?? 0,
+      streakCount: streak,
       isStreakFrozen: (json['is_streak_frozen'] as bool?) ??
           (json['streak_freeze_active'] as bool?) ??
           false,
@@ -43,14 +69,8 @@ class VersoUserProfile {
       canonType: json['canon_type'] as String? ?? 'catholic',
       bibleLanguage: json['bible_language'] as String? ?? 'en',
       birthday: json['birthday'] as String? ?? json['birthdate'] as String?,
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
-          : DateTime.now(),
-      lastSeenAt: json['last_seen'] != null
-          ? DateTime.tryParse(json['last_seen'].toString())
-          : (json['updated_at'] != null
-              ? DateTime.tryParse(json['updated_at'].toString())
-              : null),
+      createdAt: createdAt,
+      lastSeenAt: lastSeenAt,
     );
   }
 
