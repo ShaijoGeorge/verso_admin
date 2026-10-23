@@ -6,7 +6,6 @@ import 'package:verso_admin/core/transitions/app_page_transitions.dart';
 import 'package:verso_admin/core/widgets/main_wrapper.dart';
 import 'package:verso_admin/core/widgets/not_found_screen.dart';
 import 'package:verso_admin/features/alerts/screens/alerts_screen.dart';
-import 'package:verso_admin/features/auth/data/admin_auth_repository.dart';
 import 'package:verso_admin/features/auth/providers/admin_auth_provider.dart';
 import 'package:verso_admin/features/auth/screens/admin_login_screen.dart';
 import 'package:verso_admin/features/dashboard/screens/dashboard_screen.dart';

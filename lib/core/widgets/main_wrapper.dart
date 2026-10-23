@@ -5,7 +5,6 @@ import 'package:verso_admin/core/design/extensions.dart';
 import 'package:verso_admin/core/design/tokens/radii.dart';
 import 'package:verso_admin/core/design/tokens/spacing.dart';
 import 'package:verso_admin/core/supabase/supabase_provider.dart';
-import 'package:verso_admin/core/transitions/animated_branch_container.dart';
 
 class MainWrapper extends ConsumerWidget {
   const MainWrapper({
@@ -22,7 +21,7 @@ class MainWrapper extends ConsumerWidget {
     final width = MediaQuery.sizeOf(context).width;
     final isDesktop = width >= 800;
 
-    final navItems = const [
+    const navItems = [
       NavigationDestination(
         icon: Icon(Icons.dashboard_outlined),
         selectedIcon: Icon(Icons.dashboard_rounded),
@@ -124,13 +123,7 @@ class MainWrapper extends ConsumerWidget {
             ),
             const VerticalDivider(width: 1),
             Expanded(
-              child: AnimatedBranchContainer(
-                currentIndex: navigationShell.currentIndex,
-                children: [
-                  for (var i = 0; i < navigationShell.route.branches.length; i++)
-                    _BranchNavigator(index: i, navigationShell: navigationShell),
-                ],
-              ),
+              child: navigationShell,
             ),
           ],
         ),
@@ -138,13 +131,7 @@ class MainWrapper extends ConsumerWidget {
     }
 
     return Scaffold(
-      body: AnimatedBranchContainer(
-        currentIndex: navigationShell.currentIndex,
-        children: [
-          for (var i = 0; i < navigationShell.route.branches.length; i++)
-            _BranchNavigator(index: i, navigationShell: navigationShell),
-        ],
-      ),
+      body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) {
@@ -156,23 +143,5 @@ class MainWrapper extends ConsumerWidget {
         destinations: navItems,
       ),
     );
-  }
-}
-
-class _BranchNavigator extends StatelessWidget {
-  const _BranchNavigator({
-    required this.index,
-    required this.navigationShell,
-  });
-
-  final int index;
-  final StatefulNavigationShell navigationShell;
-
-  @override
-  Widget build(BuildContext context) {
-    return navigationShell.route.branches[index].navigatorKey.currentContext !=
-            null
-        ? (navigationShell.children[index])
-        : navigationShell.children[index];
   }
 }
