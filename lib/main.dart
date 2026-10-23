@@ -16,18 +16,14 @@ void main() async {
   if (EnvConfig.isConfigured) {
     await Supabase.initialize(
       url: EnvConfig.supabaseUrl,
+      // ignore: deprecated_member_use
       anonKey: EnvConfig.supabaseAnonKey,
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-      ),
-      realtimeClientOptions: const RealtimeClientOptions(
-        eventsPerSecond: 10,
-      ),
     );
   } else {
     // Fallback placeholder initialization to allow app boot without immediate crash
     await Supabase.initialize(
       url: 'https://placeholder.supabase.co',
+      // ignore: deprecated_member_use
       anonKey: 'placeholder-anon-key',
     );
   }
