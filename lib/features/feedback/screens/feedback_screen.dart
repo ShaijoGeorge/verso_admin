@@ -15,7 +15,6 @@ class FeedbackScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final feedbackAsync = ref.watch(feedbackInboxProvider);
     final selectedType = ref.watch(feedbackTypeFilterProvider);
-    final selectedStatus = ref.watch(feedbackStatusFilterProvider);
     final textTheme = context.textTheme;
     final colors = context.colors;
 
@@ -34,8 +33,7 @@ class FeedbackScreen extends ConsumerWidget {
       body: Column(
         children: [
           // Filter Row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: Spacing.md,
               vertical: Spacing.sm,
@@ -44,13 +42,13 @@ class FeedbackScreen extends ConsumerWidget {
               children: [
                 // Type filters
                 FilterChip(
-                  label: const Text('All Types'),
+                  label: const Text('All Submissions'),
                   selected: selectedType == null,
                   onSelected: (_) {
                     ref.read(feedbackTypeFilterProvider.notifier).state = null;
                   },
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 FilterChip(
                   avatar: const Icon(Icons.bug_report_outlined, size: 16),
                   label: const Text('Issues'),
@@ -60,7 +58,7 @@ class FeedbackScreen extends ConsumerWidget {
                         FeedbackType.issue;
                   },
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 FilterChip(
                   avatar: const Icon(Icons.lightbulb_outline_rounded, size: 16),
                   label: const Text('Ideas'),
@@ -68,49 +66,6 @@ class FeedbackScreen extends ConsumerWidget {
                   onSelected: (_) {
                     ref.read(feedbackTypeFilterProvider.notifier).state =
                         FeedbackType.idea;
-                  },
-                ),
-                const SizedBox(width: 14),
-                const SizedBox(
-                  height: 24,
-                  child: VerticalDivider(width: 1),
-                ),
-                const SizedBox(width: 14),
-
-                // Status filters
-                ChoiceChip(
-                  label: const Text('All Status'),
-                  selected: selectedStatus == null,
-                  onSelected: (_) {
-                    ref.read(feedbackStatusFilterProvider.notifier).state =
-                        null;
-                  },
-                ),
-                const SizedBox(width: 6),
-                ChoiceChip(
-                  label: const Text('Open'),
-                  selected: selectedStatus == 'open',
-                  onSelected: (_) {
-                    ref.read(feedbackStatusFilterProvider.notifier).state =
-                        'open';
-                  },
-                ),
-                const SizedBox(width: 6),
-                ChoiceChip(
-                  label: const Text('In Progress'),
-                  selected: selectedStatus == 'in_progress',
-                  onSelected: (_) {
-                    ref.read(feedbackStatusFilterProvider.notifier).state =
-                        'in_progress';
-                  },
-                ),
-                const SizedBox(width: 6),
-                ChoiceChip(
-                  label: const Text('Resolved'),
-                  selected: selectedStatus == 'resolved',
-                  onSelected: (_) {
-                    ref.read(feedbackStatusFilterProvider.notifier).state =
-                        'resolved';
                   },
                 ),
               ],
@@ -132,7 +87,7 @@ class FeedbackScreen extends ConsumerWidget {
                     icon: Icons.inbox_rounded,
                     title: 'No feedback found',
                     subtitle:
-                        'No feedback matches the selected filters in Supabase.',
+                        'No feedback submissions found in Supabase.',
                   );
                 }
 
@@ -161,12 +116,15 @@ class FeedbackScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 VersoChip(
-                                  text: item.status.toUpperCase(),
-                                  color: item.isResolved
-                                      ? context.appColors.success
-                                      : (item.isInProgress
-                                          ? colors.secondary
-                                          : colors.primary),
+                                  text: item.platform.toUpperCase(),
+                                  color: colors.surfaceContainerHighest,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'v${item.appVersion}',
+                                  style: textTheme.labelSmall?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                  ),
                                 ),
                                 const Spacer(),
                                 Text(

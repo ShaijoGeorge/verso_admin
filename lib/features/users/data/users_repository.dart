@@ -74,4 +74,41 @@ class UsersRepository {
       }).eq('id', userId);
     }
   }
+
+  /// Updates a user's current streak directly in the profiles table.
+  Future<void> updateStreak({
+    required String userId,
+    required int streak,
+  }) async {
+    await _client.from('profiles').update({
+      'current_streak': streak,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', userId);
+  }
+
+  /// Fetches a user's completed chapter counts from `user_progress` table.
+  Future<({int otChapters, int ntChapters})> fetchUserProgress(String userId) async {
+    try {
+      final res = await _client
+          .from('user_progress')
+          .select('book_id')
+          .eq('user_id', userId)
+          .eq('is_read', true);
+
+      var ot = 0;
+      var nt = 0;
+      for (final row in (res as List)) {
+        final map = row as Map<String, dynamic>;
+        final bookId = map['book_id'] as int? ?? 0;
+        if (bookId <= 46) {
+          ot++;
+        } else {
+          nt++;
+        }
+      }
+      return (otChapters: ot, ntChapters: nt);
+    } catch (_) {
+      return (otChapters: 0, ntChapters: 0);
+    }
+  }
 }

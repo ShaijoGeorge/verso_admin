@@ -28,6 +28,12 @@ class UserDetailBottomSheet extends ConsumerWidget {
     final colors = context.colors;
     final palette = context.palette;
 
+    final progressAsync = ref.watch(userProgressProvider(user.id));
+    final otChapters = progressAsync.value?.otChapters ?? 0;
+    final ntChapters = progressAsync.value?.ntChapters ?? 0;
+    final otProgress = progressAsync.value?.otProgress ?? 0.0;
+    final ntProgress = progressAsync.value?.ntProgress ?? 0.0;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,7 +98,7 @@ class UserDetailBottomSheet extends ConsumerWidget {
                       ],
                     ),
                     Text(
-                      '${user.otChaptersCompleted} / 929 chapters',
+                      '$otChapters / 929 chapters',
                       style: textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
@@ -102,9 +108,9 @@ class UserDetailBottomSheet extends ConsumerWidget {
                 ),
                 const Gap(Spacing.sm),
                 VersoProgressBar(
-                  value: user.otProgress,
+                  value: otProgress,
                   color: context.appColors.otColor,
-                  label: '${(user.otProgress * 100).toStringAsFixed(1)}%',
+                  label: '${(otProgress * 100).toStringAsFixed(1)}%',
                 ),
                 const Gap(Spacing.md),
                 const Divider(height: 1),
@@ -124,7 +130,7 @@ class UserDetailBottomSheet extends ConsumerWidget {
                       ],
                     ),
                     Text(
-                      '${user.ntChaptersCompleted} / 260 chapters',
+                      '$ntChapters / 260 chapters',
                       style: textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
@@ -134,9 +140,9 @@ class UserDetailBottomSheet extends ConsumerWidget {
                 ),
                 const Gap(Spacing.sm),
                 VersoProgressBar(
-                  value: user.ntProgress,
+                  value: ntProgress,
                   color: context.appColors.ntColor,
-                  label: '${(user.ntProgress * 100).toStringAsFixed(1)}%',
+                  label: '${(ntProgress * 100).toStringAsFixed(1)}%',
                 ),
               ],
             ),
@@ -251,6 +257,59 @@ class UserDetailBottomSheet extends ConsumerWidget {
                       );
                     }
                   },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Adjust Current Streak'),
+                  subtitle: Text('${user.streakCount} consecutive reading days'),
+                  trailing: VersoButton.secondary(
+                    label: 'Set Streak',
+                    onPressed: () async {
+                      final controller =
+                          TextEditingController(text: '${user.streakCount}');
+                      final newStreak = await showDialog<int>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text('Set Streak for ${user.name}'),
+                          content: TextField(
+                            controller: controller,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'New Streak (days)',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () {
+                                final val =
+                                    int.tryParse(controller.text.trim());
+                                Navigator.pop(ctx, val);
+                              },
+                              child: const Text('Save'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (newStreak != null) {
+                        if (context.mounted) Navigator.of(context).pop();
+                        await ref
+                            .read(usersListProvider.notifier)
+                            .updateStreak(user.id, newStreak);
+                        if (context.mounted) {
+                          VersoSnackbar.success(
+                            context,
+                            message: 'Streak updated to $newStreak days',
+                          );
+                        }
+                      }
+                    },
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(

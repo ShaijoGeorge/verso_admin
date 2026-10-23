@@ -7,7 +7,7 @@ class DashboardRepository {
 
   final SupabaseClient _client;
 
-  /// Fetches real-time KPI metrics from Supabase database tables.
+  /// Fetches real-time KPI metrics from Supabase database tables matching exact schemas.
   Future<DashboardStats> fetchStats() async {
     final now = DateTime.now().toUtc();
     final startOfDay =
@@ -18,7 +18,7 @@ class DashboardRepository {
     var activeReadersToday = 0;
     var openFeedbackCount = 0;
 
-    // 1. Total Registered Users
+    // 1. Total Registered Users (from profiles table)
     try {
       final res = await _client
           .from('profiles')
@@ -34,54 +34,48 @@ class DashboardRepository {
       }
     }
 
-    // 2. New Signups Today
+    // 2. New Signups Today (profiles updated/created today)
     try {
       final res = await _client
           .from('profiles')
           .select('id')
-          .gte('created_at', startOfDay)
+          .gte('updated_at', startOfDay)
           .count(CountOption.exact);
       newSignupsToday = res.count;
     } catch (_) {
-      try {
-        final res = await _client
-            .from('profiles')
-            .select('id')
-            .gte('updated_at', startOfDay)
-            .count(CountOption.exact);
-        newSignupsToday = res.count;
-      } catch (_) {
-        newSignupsToday = 0;
-      }
+      newSignupsToday = 0;
     }
 
-    // 3. Active Readers Today
+    // 3. Active Readers Today (from user_progress read_at or current_streak > 0)
     try {
-      final res = await _client
-          .from('profiles')
-          .select('id')
-          .gt('current_streak', 0)
-          .count(CountOption.exact);
-      activeReadersToday = res.count;
+      final progressToday = await _client
+          .from('user_progress')
+          .select('user_id')
+          .gte('read_at', startOfDay);
+      final uniqueReaders = (progressToday as List)
+          .map((r) => (r as Map<String, dynamic>)['user_id'])
+          .toSet();
+      activeReadersToday = uniqueReaders.length;
     } catch (_) {
+      activeReadersToday = 0;
+    }
+
+    if (activeReadersToday == 0) {
       try {
         final res = await _client
             .from('profiles')
             .select('id')
-            .gte('updated_at', startOfDay)
+            .gt('current_streak', 0)
             .count(CountOption.exact);
         activeReadersToday = res.count;
-      } catch (_) {
-        activeReadersToday = 0;
-      }
+      } catch (_) {}
     }
 
-    // 4. Open Feedback
+    // 4. Open Feedback (from feedbacks table)
     try {
       final res = await _client
           .from('feedbacks')
           .select('id')
-          .neq('status', 'resolved')
           .count(CountOption.exact);
       openFeedbackCount = res.count;
     } catch (_) {

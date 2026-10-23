@@ -94,3 +94,16 @@ class VersoUserProfile {
   double get otProgress => (otChaptersCompleted / 929.0).clamp(0.0, 1.0);
   double get ntProgress => (ntChaptersCompleted / 260.0).clamp(0.0, 1.0);
 }
+
+class UserReadingChapters {
+  const UserReadingChapters({
+    required this.otChapters,
+    required this.ntChapters,
+  });
+
+  final int otChapters;
+  final int ntChapters;
+
+  double get otProgress => (otChapters / 929.0).clamp(0.0, 1.0);
+  double get ntProgress => (ntChapters / 260.0).clamp(0.0, 1.0);
+}

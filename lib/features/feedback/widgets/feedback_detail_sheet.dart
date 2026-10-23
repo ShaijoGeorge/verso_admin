@@ -42,12 +42,8 @@ class FeedbackDetailSheet extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               VersoChip(
-                text: feedback.status.toUpperCase(),
-                color: feedback.isResolved
-                    ? context.appColors.success
-                    : (feedback.isInProgress
-                        ? colors.secondary
-                        : colors.primary),
+                text: feedback.platform.toUpperCase(),
+                color: colors.surfaceContainerHighest,
               ),
               const Spacer(),
               Text(
@@ -138,41 +134,24 @@ class FeedbackDetailSheet extends ConsumerWidget {
           const Gap(Spacing.lg),
 
           // Triage Actions
-          const VersoSectionHeader(title: 'Update Triage Status'),
+          const VersoSectionHeader(title: 'Triage Actions'),
           const Gap(Spacing.sm),
 
           Row(
             children: [
               Expanded(
-                child: VersoButton.secondary(
-                  label: 'Mark In Progress',
+                child: VersoButton.destructive(
+                  label: 'Delete Record',
                   onPressed: () async {
                     Navigator.of(context).pop();
                     await ref
-                        .read(feedbackInboxProvider.notifier)
-                        .updateStatus(feedback.id, 'in_progress');
+                        .read(feedbackRepositoryProvider)
+                        .deleteFeedback(feedback.id);
+                    ref.invalidate(feedbackInboxProvider);
                     if (context.mounted) {
                       VersoSnackbar.success(
                         context,
-                        message: 'Feedback #${feedback.id.substring(0, 8)} set to In Progress',
-                      );
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: VersoButton(
-                  label: 'Resolve Issue',
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    await ref
-                        .read(feedbackInboxProvider.notifier)
-                        .updateStatus(feedback.id, 'resolved');
-                    if (context.mounted) {
-                      VersoSnackbar.success(
-                        context,
-                        message: 'Feedback #${feedback.id.substring(0, 8)} marked as Resolved',
+                        message: 'Feedback deleted successfully',
                       );
                     }
                   },

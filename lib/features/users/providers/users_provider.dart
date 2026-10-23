@@ -16,6 +16,17 @@ class UserSearchQueryNotifier extends Notifier<String> {
   set state(String value) => super.state = value;
 }
 
+// ignore: specify_nonobvious_property_types
+final userProgressProvider =
+    FutureProvider.family<UserReadingChapters, String>((ref, userId) async {
+  final repo = ref.watch(usersRepositoryProvider);
+  final progress = await repo.fetchUserProgress(userId);
+  return UserReadingChapters(
+    otChapters: progress.otChapters,
+    ntChapters: progress.ntChapters,
+  );
+});
+
 final userSearchQueryProvider =
     NotifierProvider<UserSearchQueryNotifier, String>(
   UserSearchQueryNotifier.new,
@@ -41,6 +52,12 @@ class UsersListNotifier extends AsyncNotifier<List<VersoUserProfile>> {
   Future<void> updateUserRole(String userId, String newRole) async {
     final repo = ref.read(usersRepositoryProvider);
     await repo.updateUserRole(userId: userId, newRole: newRole);
+    ref.invalidateSelf();
+  }
+
+  Future<void> updateStreak(String userId, int streak) async {
+    final repo = ref.read(usersRepositoryProvider);
+    await repo.updateStreak(userId: userId, streak: streak);
     ref.invalidateSelf();
   }
 
